@@ -4,6 +4,8 @@
 
 This is a script for imaging transcriptomics analysis using Allen Human Brain Atlas (AHBA). The script is used in `R` and some `python` scripts are called via the `reticulate` package.
 
+The codes were tested on Windows 10 system with `R` 4.4.1 and `python` 3.9.7.
+
 ## Download
 
 The preprocessed data (brain atlas, RNA-seq data etc.) can be downloaded from [here](https://drive.google.com/file/d/1HmgRQwb_udEsU32j-6DthM5YJzrouFTp/view?usp=sharing). Users should put the `data` folder in the root path of this script.
