@@ -1,0 +1,13 @@
+imagingtranscriptomics --input E:/Neuroimage/BIDS_TestDataSet/derivatives/freesurfer/mean_values_no_header.txt --geneset 'UK_Biobank_GWAS_v1' pls --ncomp 5
+
+imagingtranscriptomics --input /mnt/e/Neuroimage/BIDS_TestDataSet/derivatives/freesurfer/mean_values_no_header.txt --geneset 'GO_Cellular_Component_2023' pls --ncomp 1
+
+imagingtranscriptomics --input E:/Neuroimage/BIDS_TestDataSet/derivatives/freesurfer/imaging_data.txt --no-gsea pls --ncomp 2
+
+imagingtranscriptomics --input /mnt/e/Neuroimage/QSM_test/HC45/HC45_mni_qsm_smooth_3mm.nii --geneset 'GO_Biological_Process_2023' pls --ncomp 3
+
+
+
+imt_gsea --geneset avail
+
+imt_gsea --input E:/Neuroimage/BIDS_TestDataSet/derivatives/freesurfer/Imt_mean_values_no_header_pls/pls_analysis.pkl --geneset Proteomics_Drug_Atlas_2023

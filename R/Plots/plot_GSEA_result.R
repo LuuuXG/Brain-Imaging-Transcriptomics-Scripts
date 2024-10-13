@@ -1,0 +1,144 @@
+##### Visualization (https://www.jianshu.com/p/f77127c164bc, https://sandy9707.github.io/Knowledge-Vault//2023/July/%E7%94%9F%E7%89%A9%E4%BF%A1%E6%81%AF%E5%AD%A6/GSEA%E5%AF%8C%E9%9B%86%E5%88%86%E6%9E%90%E5%8F%AF%E8%A7%86%E5%8C%96%20(7_3_2023%202_16_16%20PM).html)
+library(ggridges)
+library(stringr)
+library(cowplot)
+library(enrichplot)
+library(scales)
+# Load the GSEA results
+# fetch `gsea_GO_results_data`
+load(file=file.path(output_root_folder, 'gsea_GO_results_data_ont=ALL.RData'))
+gsea_output_folder <- file.path(output_root_folder, 'gsea_output')
+
+component_index <- 1
+ont <- 'CC'
+
+gsea_res_for_plot <- gsea_GO_results_data[[component_index]]
+
+result_df <- gsea_res_for_plot@result
+result_df <- subset(result_df, ONTOLOGY == ont)
+
+result_df$Description <- paste0(ont, ": ", result_df$Description)
+
+number_of_genes <- 5
+
+result_df <- result_df[order(result_df$p.adjust), ][1:number_of_genes, ]
+
+result_df$log_p_adjust <- -log10(result_df$p.adjust)
+
+plot_data <- data.frame()
+
+for (i in 1:nrow(result_df)) {
+  description <- result_df$Description[i]
+  
+  core_genes <- unlist(strsplit(result_df$core_enrichment[i], "/"))
+  
+  nes_values <- gsea_res_for_plot@geneList[core_genes]
+  p_adjust <- result_df$p.adjust[i]
+  
+  temp_df <- data.frame(Description = description, NES = as.numeric(nes_values), p.adjust = p_adjust)
+  
+  plot_data <- rbind(plot_data, temp_df)
+}
+
+plot_data$log_p_adjust <- -log10(plot_data$p.adjust)
+
+## 1. ridgeplot
+ridgeplot <- ggplot(plot_data, aes(x = NES, y = reorder(Description, -p.adjust), fill = stat(x))) +
+  geom_density_ridges_gradient(scale = 1.5, rel_min_height = 0) +
+  scale_fill_gradientn(
+    name = 'NES',
+    colors = c('#33FFFF', '#66FFFF', '#99FFFF', '#CCFFFF', 'white', '#CCFFCC', '#99FF99', '#66FF66', '#33FF33'),
+    limits = c(-4, 4),  # 设置颜色条的范围
+    values = rescale(c(-2.5, -1.25, -0.5, 0, 0.5, 1.25, 2.5), to = c(0, 1))  # 使 white 对应 0
+  ) +
+  scale_x_continuous(
+    limits = c(-4, 3),  # 设置X轴范围
+    expand = c(0, 0)    # 去除X轴两端的额外空间
+  ) +
+  scale_y_discrete(expand = expansion(add = c(0.5, 1.5)), labels = function(x) str_wrap(x, width = 28)) +
+  theme_minimal() +
+  theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_text(size = 18, hjust = 0.5), # x轴标签居中
+    plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),    # 标题居中
+    axis.text.y = element_text(size = 18, face = "bold"),
+    axis.text.x = element_text(size = 14),
+    axis.ticks.x = element_line(color = "black", linewidth = 0.5),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.75),
+    panel.grid.major = element_blank(),
+    panel.grid.major.y = element_line(color = "grey", size = 0.5),
+    panel.grid.minor = element_blank(),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(1, "cm"),
+  ) +
+  labs(x = "Normalized Enrichment Score (NES)")
+
+## 2. barplot
+readable_gsea_res_for_plot <- clusterProfiler::setReadable(gsea_res_for_plot, OrgDb = org.Hs.eg.db, keyType = "ENTREZID")
+
+readable_result_df <- readable_gsea_res_for_plot@result
+
+readable_result_df <- subset(readable_result_df, ONTOLOGY == ont)
+readable_result_df$Description <- paste0(ont, ": ", readable_result_df$Description)
+
+readable_result_df <- readable_result_df[order(readable_result_df$p.adjust), ][1:number_of_genes, ]
+
+readable_result_df$log_p_adjust <- -log10(readable_result_df$p.adjust)
+
+readable_result_df$top5_genes <- sapply(readable_result_df$core_enrichment, function(x) {
+  genes <- unlist(strsplit(x, "/"))
+  paste(genes[1:min(5, length(genes))], collapse = ", ") # 取前5个基因并用逗号连接
+})
+
+# 创建横向条形图，并添加前 5 个基因名称作为标签
+barplot <- ggplot(readable_result_df, aes(x = -log10(p.adjust), y = reorder(Description, -p.adjust), fill = log_p_adjust)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = top5_genes, x=0.05), 
+            hjust = 0, size = 4, color = "black", vjust = 0.5) + # 在条形图内添加前5个基因名称
+  scale_fill_gradientn(
+    colors = c('#CC99FF', '#B266FF', '#9933FF', '#7F00FF'), 
+    name = expression(-log[10] * "(" * italic(p) * "-adjust)"),
+    limits = c(2.2, 7.3)  # 固定颜色条的范围在 2 到 8
+  ) +
+  scale_x_continuous(
+    limits = c(0, 7.3),  # 固定 X 轴范围在 0 到 8
+    expand = c(0.01, 0)   # 去除 X 轴两端的空白
+  ) +
+  theme_minimal() +
+  scale_y_discrete(expand = expansion(add = c(0.5, 1.5)), labels = function(x) str_wrap(x, width = 30)) + # 自动换行
+  theme(
+    axis.title.y = element_blank(),
+    axis.title.x = element_text(size = 18, hjust = 0.5), # x轴标签居中
+    plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),    # 标题居中
+    axis.text.y = element_text(size = 18, face = "bold"),
+    axis.text.x = element_text(size = 14),
+    axis.ticks.x = element_line(color = "black", linewidth = 0.5),
+    panel.border = element_rect(color = "black", fill = NA, linewidth = 0.75),
+    panel.grid.major.x = element_blank(),
+    panel.grid.major.y = element_line(color = "grey", size = 0.5),
+    panel.grid.minor = element_blank(),
+    legend.title = element_text(size = 14),
+    legend.text = element_text(size = 12),
+    legend.key.size = unit(1, "cm"),
+  ) +
+  labs(x = expression(-log[10] * "(" * italic(p) * "-adjust)"))
+
+combined_plot <- plot_grid(
+  ridgeplot,
+  barplot + theme(axis.title.y = element_blank(), axis.text.y = element_blank()), # 去掉 y 轴标签和文字
+  align = 'h', # 水平对齐
+  ncol = 2, # 两列
+  rel_widths = c(1.5, 1) # 相对宽度，可以根据需要调整
+)
+
+# 显示合并后的图形
+print(combined_plot)
+
+# save
+jpeg(file = file.path(gsea_output_folder, paste0('GSEA_result_ridgeplot+barplot_ont=', ont, '.jpg')), width = 4300, height = 1600, res = 300)
+print(combined_plot)
+dev.off()
+
+## 3. gseaplot2
+p <- gseaplot2(gsea_res_for_plot, geneSetID = 1)
