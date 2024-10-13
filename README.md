@@ -2,7 +2,11 @@
 
 # Brain Imaging Transcriptomics Scripts
 
+This is a script for imaging transcriptomics analysis using Allen Human Brain Atlas (AHBA). The script is used in `R` and some `python` scripts are called via the `reticulate` package.
+
 ## Download
+
+The preprocessed data (brain atlas, RNA-seq data etc.) can be downloaded from [here](https://drive.google.com/file/d/1HmgRQwb_udEsU32j-6DthM5YJzrouFTp/view?usp=sharing). Users should put the `data` folder in the root path of this script.
 
 python packages requirement:
 - pyls
@@ -14,10 +18,12 @@ python packages requirement:
 
 ## Usage
 
-## Possible issues
+You can click and open the `main.R` file in the `./R` folder to perform an imaging transcriptomics analysis starting with the acquisition of gene expression matrix.
+
+## Possible Issues
 
 1. `reticulate` crash or similar probelms: [py_run_file_impl() crashing since .v1.27](https://github.com/rstudio/reticulate/issues/1422)
-Reinstall R might help.
+Reinstall `R` might help.
 2. `Error in serialize(data, node$con) : error writing to connection`
 This may be related to insufficient memory, especially for GSEA analysis of multiple PLS components.
 
