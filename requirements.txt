@@ -1,0 +1,6 @@
+numpy
+pandas
+scipy
+statsmodels
+abagen
+brainsmash
