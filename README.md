@@ -24,8 +24,8 @@ What you need is to prepare a single 3D brain imaging file in Nifti format (`.ni
 
 ## Possible Issues
 
-1. `reticulate` crash or similar probelms: [py_run_file_impl() crashing since .v1.27](https://github.com/rstudio/reticulate/issues/1422): Reinstall `R` might help.
-2. `Error in serialize(data, node$con) : error writing to connection`: This may be related to insufficient memory, especially for GSEA analysis of multiple PLS components.
+1. `reticulate` crash or similar problems: [py_run_file_impl() crashing since .v1.27](https://github.com/rstudio/reticulate/issues/1422): Reinstall `R` might help.
+2. `Error in serialize(data, node$con): error writing to connection`: This may be related to insufficient memory, especially for GSEA analysis of multiple PLS components.
 
 ## Similar Works
 
